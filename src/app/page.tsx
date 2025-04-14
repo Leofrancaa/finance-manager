@@ -1,103 +1,102 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { YearSelector } from "@/components/yearSelector";
+import { MonthButtons } from "@/components/monthButton";
+import { ExpenseForm } from "@/components/expenseForm";
+import { ExpenseSummary } from "@/components/expenseSummary";
+
+interface Expense {
+  _id?: string;
+  type: string;
+  date: string;
+  amount: number;
+  paymentMethod: string;
+  installments?: number;
+}
+
+export default function HomePage() {
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+
+  // 👉 Carrega as despesas ao iniciar
+  useEffect(() => {
+    fetch("/api/expenses")
+      .then((res) => res.json())
+      .then((data) => setExpenses(data));
+  }, []);
+
+  const handleAddExpense = async (data: {
+    type: string;
+    day: string;
+    amount: string;
+    paymentMethod: string;
+    installments?: string;
+  }) => {
+    const fullDate = new Date(selectedYear, selectedMonth!, parseInt(data.day));
+
+    const newExpense: Expense = {
+      type: data.type,
+      date: fullDate.toISOString(),
+      amount: parseFloat(data.amount),
+      paymentMethod: data.paymentMethod,
+      installments: data.installments ? parseInt(data.installments) : undefined,
+    };
+
+    // 👉 Salva no MongoDB via POST
+    const response = await fetch("/api/expenses", {
+      method: "POST",
+      body: JSON.stringify(newExpense),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const saved = await response.json();
+
+    setExpenses((prev) => [...prev, { ...newExpense, _id: saved.insertedId }]);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="max-w-xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Gerenciador de Finanças</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      <YearSelector selectedYear={selectedYear} onChange={setSelectedYear} />
+
+      {selectedYear && (
+        <MonthButtons
+          selectedMonth={selectedMonth}
+          onSelect={setSelectedMonth}
+        />
+      )}
+
+      {selectedMonth !== null && (
+        <>
+          <ExpenseForm onSubmit={handleAddExpense} />
+          <ExpenseSummary
+            expenses={expenses.map(({ _id, ...rest }) => ({
+              id: _id || "",
+              ...rest,
+            }))}
+            year={selectedYear}
+            month={selectedMonth}
+            onDelete={async (id) => {
+              // 1. Tenta remover do MongoDB
+              await fetch(`/api/expenses/${id}`, {
+                method: "DELETE",
+              });
+
+              // 2. Atualiza o estado local
+              setExpenses((prev) =>
+                prev.filter((expense) => expense._id !== id)
+              );
+            }}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </>
+      )}
+    </main>
   );
 }
