@@ -42,7 +42,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
   });
 
   return (
-    <div className="mt-6 p-4 bg-gray-100 rounded-md text-black space-y-4">
+    <div className=" p-4 bg-gray-100 rounded-md mt-4 text-black">
       {/* Resumo Mensal */}
       <div>
         <h2 className="text-xl font-bold">
