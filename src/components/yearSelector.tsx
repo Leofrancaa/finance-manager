@@ -15,7 +15,7 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
 
   return (
     <select
-      className="p-2 border rounded-md bg-white text-black cursor-pointer"
+      className="p-2 border rounded-md bg-white text-black cursor-pointer w-36"
       value={selectedYear}
       onChange={(e) => onChange(Number(e.target.value))}
     >

@@ -26,12 +26,12 @@ export const MonthButtons: React.FC<MonthButtonsProps> = ({
   onSelect,
 }) => {
   return (
-    <div className="grid grid-cols-3 gap-2 mt-4 text-black">
+    <div className="grid grid-cols-3 gap-3 mt-4 text-black">
       {months.map((month, i) => (
         <button
           key={i}
           onClick={() => onSelect(i)}
-          className={`p-2 rounded-md cursor-pointer hover:bg-blue-500 ${
+          className={`p-2 rounded-md cursor-pointer hover:bg-blue-500 transition-colors duration-300 ${
             selectedMonth === i ? "bg-blue-500 text-black" : "bg-gray-200"
           }`}
         >

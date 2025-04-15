@@ -52,7 +52,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
         <option className="cursor-pointer" value="">
           Tipo de gasto
         </option>
-        <option className="cursor-pointer" value="alimentacao">
+        <option className="cursor-pointer" value="alimentação">
           Alimentação
         </option>
         <option className="cursor-pointer" value="transporte">
@@ -64,10 +64,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
         <option className="cursor-pointer" value="lazer">
           Lazer
         </option>
-        <option className="cursor-pointer" value="educacao">
+        <option className="cursor-pointer" value="educação">
           Educação
         </option>
-        <option className="cursor-pointer" value="saude">
+        <option className="cursor-pointer" value="saúde">
           Saúde
         </option>
         <option className="cursor-pointer" value="outros">
@@ -106,11 +106,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
       >
         <option value="">Forma de pagamento</option>
         <option value="dinheiro">Dinheiro</option>
-        <option value="cartao">Cartão</option>
+        <option value="cartão">Cartão</option>
         <option value="pix">Pix</option>
       </select>
 
-      {formData.paymentMethod === "cartao" && (
+      {formData.paymentMethod === "cartão" && (
         <input
           name="installments"
           type="number"
@@ -123,7 +123,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
 
       <button
         type="submit"
-        className="w-full p-2 bg-green-500 text-white rounded cursor-pointer hover:bg-green-600 transition duration-200"
+        className="w-full p-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-500 transition duration-200"
       >
         Adicionar gasto
       </button>
