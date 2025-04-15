@@ -76,7 +76,7 @@ export const ExpenseByTypeChart = ({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-xl w-[80vw] mx-auto flex flex-col justify-center border-2 border-black">
+    <div className="bg-white p-4 rounded-lg shadow-xl w-[82vw] mx-auto flex flex-col justify-center border-2 border-black">
       <h2 className="text-lg font-bold mb-4 flex self-center border-b-2 border-green-500">
         Gastos por Tipo
       </h2>

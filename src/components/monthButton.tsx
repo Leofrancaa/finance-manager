@@ -32,7 +32,9 @@ export const MonthButtons: React.FC<MonthButtonsProps> = ({
           key={i}
           onClick={() => onSelect(i)}
           className={`p-2 rounded-md cursor-pointer hover:bg-blue-500 transition-colors duration-300 ${
-            selectedMonth === i ? "bg-blue-500 text-black" : "bg-gray-200"
+            selectedMonth === i
+              ? "bg-black text-white"
+              : "bg-trasnparent border-2"
           }`}
         >
           {month}
