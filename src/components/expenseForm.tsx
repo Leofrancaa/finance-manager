@@ -8,6 +8,7 @@ interface ExpenseFormProps {
     amount: string;
     paymentMethod: string;
     installments: string;
+    note: string;
   }) => void;
 }
 
@@ -18,6 +19,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
     amount: "",
     paymentMethod: "",
     installments: "",
+    note: "",
   });
 
   const handleChange = (
@@ -36,6 +38,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
       amount: "",
       paymentMethod: "",
       installments: "",
+      note: "",
     });
   };
 
@@ -74,7 +77,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
           Outros
         </option>
       </select>
-
       <input
         name="day"
         type="number"
@@ -86,7 +88,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
         max={31}
         required
       />
-
       <input
         name="amount"
         type="number"
@@ -95,6 +96,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
         placeholder="Valor"
         className="w-full p-2 border rounded bg-white text-black placeholder-black"
         required
+      />
+
+      <input
+        name="note"
+        type="text"
+        value={formData.note}
+        onChange={handleChange}
+        placeholder="Observações (ex: janta com amigos)"
+        className="w-full p-2 border rounded bg-white text-black placeholder:text-gray-500"
       />
 
       <select
@@ -109,7 +119,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
         <option value="cartão">Cartão</option>
         <option value="pix">Pix</option>
       </select>
-
       {formData.paymentMethod === "cartão" && (
         <input
           name="installments"
@@ -120,7 +129,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
           className="w-full p-2 border rounded"
         />
       )}
-
       <button
         type="submit"
         className="w-full p-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-500 transition duration-200"

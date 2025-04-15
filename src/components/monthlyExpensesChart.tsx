@@ -51,9 +51,11 @@ export const MonthlyExpensesChart = ({
   });
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-xl w-[82vw] mx-auto flex flex-col justify-center border-2 border-black">
-      <h2 className="text-xl font-bold mb-4">Gastos Mensais em {year}</h2>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col border-2 border-black">
+      <h2 className="text-xl font-bold mb-4 flex self-center border-b-2 border-green-500">
+        Gastos Mensais em {year}
+      </h2>
+      <ResponsiveContainer width="100%" height={400}>
         <BarChart data={monthlyTotals}>
           <XAxis dataKey="name" />
           <YAxis />

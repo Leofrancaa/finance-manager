@@ -1,8 +1,15 @@
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 
+interface Expense {
+  date: string;
+  type: string;
+  amount: number;
+  isRecurring?: boolean;
+}
+
 interface ExpenseSummaryProps {
-  expenses: { date: string; type: string; amount: number }[];
+  expenses: Expense[];
   year: number;
   month: number | null;
 }
@@ -16,18 +23,39 @@ const COLORS = [
   "#a4de6c",
 ];
 
+// Gera cópias dos gastos fixos para o mês selecionado
+function getRecurringExpensesForMonth(
+  expenses: Expense[],
+  year: number,
+  month: number
+): Expense[] {
+  return expenses
+    .filter((e) => e.isRecurring)
+    .map((e, i) => {
+      const originalDate = new Date(e.date);
+      return {
+        ...e,
+        date: new Date(year, month, originalDate.getDate()).toISOString(),
+        id: `${e.type}-${month}-${i}`, // cria ID fictício para o gráfico
+      };
+    });
+}
+
 export const ExpenseByTypeChart = ({
   expenses,
   year,
   month,
 }: ExpenseSummaryProps) => {
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((e) => {
+    if (month === null) return [];
+
+    const recurring = getRecurringExpensesForMonth(expenses, year, month);
+    const normal = expenses.filter((e) => {
       const d = new Date(e.date);
-      return (
-        d.getFullYear() === year && (month === null || d.getMonth() === month)
-      );
+      return d.getFullYear() === year && d.getMonth() === month;
     });
+
+    return [...normal, ...recurring];
   }, [expenses, year, month]);
 
   const data = useMemo(() => {
@@ -43,14 +71,8 @@ export const ExpenseByTypeChart = ({
     }));
   }, [filteredExpenses]);
 
-  const monthlyExpenses = expenses.filter((e) => {
-    const d = new Date(e.date);
-    return d.getFullYear() === year && d.getMonth() === month;
-  });
-
   const totalByType: Record<string, number> = {};
-
-  monthlyExpenses.forEach((exp) => {
+  filteredExpenses.forEach((exp) => {
     if (!totalByType[exp.type]) {
       totalByType[exp.type] = 0;
     }
@@ -59,7 +81,6 @@ export const ExpenseByTypeChart = ({
 
   let topCategory = "";
   let maxValue = 0;
-
   let lowestCategory = "";
   let minValue = Infinity;
 
@@ -76,7 +97,7 @@ export const ExpenseByTypeChart = ({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-xl w-[82vw] mx-auto flex flex-col justify-center border-2 border-black">
+    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col justify-center border-2 border-black">
       <h2 className="text-lg font-bold mb-4 flex self-center border-b-2 border-green-500">
         Gastos por Tipo
       </h2>
