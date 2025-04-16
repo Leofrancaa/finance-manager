@@ -1,17 +1,7 @@
 import React from "react";
-
-interface Expense {
-  date: string;
-  amount: number;
-  type: string;
-  note?: string;
-}
-
-interface CalendarViewProps {
-  year: number;
-  month: number; // de 0 a 11
-  expenses: Expense[];
-}
+import { CalendarViewProps } from "../app/interfaces/calendarProps";
+import { Expense } from "../app/interfaces/expense";
+import { monthName } from "../app/utils/monthName";
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   year,
@@ -20,7 +10,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Agrupa despesas por dia
   const expensesByDay = expenses.reduce<Record<number, Expense[]>>(
     (acc, expense) => {
       const expenseDate = new Date(expense.date);
@@ -31,24 +20,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     },
     {}
   );
-
-  const monthName = (monthNumber: number) => {
-    const months = [
-      "Janeiro",
-      "Fevereiro",
-      "Março",
-      "Abril",
-      "Maio",
-      "Junho",
-      "Julho",
-      "Agosto",
-      "Setembro",
-      "Outubro",
-      "Novembro",
-      "Dezembro",
-    ];
-    return months[monthNumber] || "";
-  };
 
   return (
     <div className="border-black border-2 p-6 rounded-md flex justify-center flex-col">

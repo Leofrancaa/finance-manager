@@ -7,17 +7,15 @@ import { ExpenseForm } from "@/components/expenseForm";
 import { ExpenseSummary } from "@/components/expenseSummary";
 import { ExpenseByTypeChart } from "@/components/expenseByTypeChart";
 import { MonthlyExpensesChart } from "@/components/monthlyExpensesChart";
-import { CalendarView } from "../components/calendarView";
+import { CalendarView } from "@/components/calendarView";
 
-interface Expense {
-  _id?: string;
-  type: string;
-  date: string;
-  amount: number;
-  paymentMethod: string;
-  installments?: number;
-  note?: string;
-}
+import { Expense, AddExpenseData, MappedExpense } from "./interfaces/expense";
+
+import {
+  generateInstallments,
+  saveExpenses,
+  filterExpensesByMonthYear,
+} from "./utils/expense";
 
 export default function HomePage() {
   const [selectedYear, setSelectedYear] = useState<number>(
@@ -32,57 +30,34 @@ export default function HomePage() {
       .then((data) => setExpenses(data));
   }, []);
 
-  const handleAddExpense = async (data: {
-    type: string;
-    day: string;
-    amount: string;
-    paymentMethod: string;
-    installments?: string;
-  }) => {
-    const totalInstallments = data.installments
-      ? parseInt(data.installments)
-      : 1;
-
-    const baseDate = new Date(selectedYear, selectedMonth!, parseInt(data.day));
-    const valuePerInstallment = parseFloat(data.amount) / totalInstallments;
-
-    const generatedExpenses: Expense[] = Array.from(
-      { length: totalInstallments },
-      (_, i) => {
-        const installmentDate = new Date(baseDate);
-        installmentDate.setMonth(baseDate.getMonth() + i);
-
-        return {
-          type: data.type,
-          date: installmentDate.toISOString(),
-          amount: parseFloat(valuePerInstallment.toFixed(2)),
-          paymentMethod: data.paymentMethod,
-          installments: totalInstallments,
-        };
-      }
+  const handleAddExpense = async (data: AddExpenseData) => {
+    const newExpenses = generateInstallments(
+      data,
+      selectedYear,
+      selectedMonth!
     );
-
-    for (const expense of generatedExpenses) {
-      const response = await fetch("/api/expenses", {
-        method: "POST",
-        body: JSON.stringify(expense),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const saved = await response.json();
-      setExpenses((prev) => [...prev, { ...expense, _id: saved.insertedId }]);
-    }
+    const saved = await saveExpenses(newExpenses);
+    setExpenses((prev) => [...prev, ...saved]);
   };
 
-  const mappedExpenses = expenses.map(({ _id, ...rest }) => ({
+  const mappedExpenses: MappedExpense[] = expenses.map(({ _id, ...rest }) => ({
     id: _id || "",
     ...rest,
   }));
 
+  const handleDelete = async (id: string) => {
+    await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+    setExpenses((prev) => prev.filter((expense) => expense._id !== id));
+  };
+
+  const filteredExpenses = filterExpensesByMonthYear(
+    mappedExpenses,
+    selectedYear,
+    selectedMonth!
+  );
+
   return (
-    <main className="w-[100vw] mt-4 bg-white h-full text-black rounded-md flex flex-col gap-4 p-10">
+    <main className="w-[100vw] mt-4 bg-gray-200 h-full text-black rounded-md flex flex-col gap-4 p-10">
       <h1 className="text-2xl font-bold mb-4">Gerenciador de Finanças</h1>
 
       <YearSelector selectedYear={selectedYear} onChange={setSelectedYear} />
@@ -95,7 +70,6 @@ export default function HomePage() {
               onSelect={setSelectedMonth}
             />
           )}
-
           {selectedMonth !== null && (
             <ExpenseForm onSubmit={handleAddExpense} />
           )}
@@ -107,15 +81,7 @@ export default function HomePage() {
               expenses={mappedExpenses}
               year={selectedYear}
               month={selectedMonth}
-              onDelete={async (id) => {
-                await fetch(`/api/expenses/${id}`, {
-                  method: "DELETE",
-                });
-
-                setExpenses((prev) =>
-                  prev.filter((expense) => expense._id !== id)
-                );
-              }}
+              onDelete={handleDelete}
             />
           )}
         </div>
@@ -124,7 +90,7 @@ export default function HomePage() {
       <div>
         {selectedMonth !== null && (
           <CalendarView
-            expenses={mappedExpenses}
+            expenses={filteredExpenses}
             year={selectedYear}
             month={selectedMonth}
           />
@@ -141,7 +107,6 @@ export default function HomePage() {
             />
           </div>
         )}
-
         {selectedMonth !== null && (
           <MonthlyExpensesChart expenses={mappedExpenses} year={selectedYear} />
         )}

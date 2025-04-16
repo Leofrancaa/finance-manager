@@ -1,12 +1,16 @@
 import { useMemo } from "react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
 
-interface Expense {
-  date: string;
-  type: string;
-  amount: number;
-  isRecurring?: boolean;
-}
+import { Expense } from "@/app/interfaces/expense"; // 👈 ajuste o caminho se necessário
 
 interface ExpenseSummaryProps {
   expenses: Expense[];
@@ -23,24 +27,6 @@ const COLORS = [
   "#a4de6c",
 ];
 
-// Gera cópias dos gastos fixos para o mês selecionado
-function getRecurringExpensesForMonth(
-  expenses: Expense[],
-  year: number,
-  month: number
-): Expense[] {
-  return expenses
-    .filter((e) => e.isRecurring)
-    .map((e, i) => {
-      const originalDate = new Date(e.date);
-      return {
-        ...e,
-        date: new Date(year, month, originalDate.getDate()).toISOString(),
-        id: `${e.type}-${month}-${i}`, // cria ID fictício para o gráfico
-      };
-    });
-}
-
 export const ExpenseByTypeChart = ({
   expenses,
   year,
@@ -49,13 +35,10 @@ export const ExpenseByTypeChart = ({
   const filteredExpenses = useMemo(() => {
     if (month === null) return [];
 
-    const recurring = getRecurringExpensesForMonth(expenses, year, month);
-    const normal = expenses.filter((e) => {
+    return expenses.filter((e) => {
       const d = new Date(e.date);
       return d.getFullYear() === year && d.getMonth() === month;
     });
-
-    return [...normal, ...recurring];
   }, [expenses, year, month]);
 
   const data = useMemo(() => {
@@ -71,50 +54,40 @@ export const ExpenseByTypeChart = ({
     }));
   }, [filteredExpenses]);
 
-  const totalByType: Record<string, number> = {};
-  filteredExpenses.forEach((exp) => {
-    if (!totalByType[exp.type]) {
-      totalByType[exp.type] = 0;
-    }
-    totalByType[exp.type] += exp.amount;
-  });
-
   let topCategory = "";
   let maxValue = 0;
   let lowestCategory = "";
   let minValue = Infinity;
 
-  for (const [type, total] of Object.entries(totalByType)) {
-    if (total > maxValue) {
-      maxValue = total;
-      topCategory = type;
+  for (const { name, value } of data) {
+    if (value > maxValue) {
+      maxValue = value;
+      topCategory = name;
     }
-
-    if (total < minValue) {
-      minValue = total;
-      lowestCategory = type;
+    if (value < minValue) {
+      minValue = value;
+      lowestCategory = name;
     }
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col justify-center border-2 border-black">
-      <h2 className="text-lg font-bold mb-4 flex self-center border-b-2 border-green-500">
+    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col justify-center items-center border-2 border-black">
+      <h2 className="text-lg font-bold mb-4 border-b-2 border-green-500">
         Gastos por Tipo
       </h2>
-      <div className="flex">
-        <ul className="text-md">
+      <div className="flex w-full justify-between px-16">
+        <ul className="text-md w-1/3">
           <li>
             {topCategory && (
-              <p className=" text-gray-700 mt-2">
+              <p className="text-gray-700 mt-2">
                 • Maior gasto no mês: <strong>{topCategory}</strong> com R${" "}
                 {maxValue.toFixed(2)}
               </p>
             )}
           </li>
-
           <li>
             {lowestCategory && (
-              <p className=" text-gray-700 mt-1">
+              <p className="text-gray-700 mt-1">
                 • Menor gasto do mês: <strong>{lowestCategory}</strong> com R${" "}
                 {minValue.toFixed(2)}
               </p>
@@ -122,40 +95,27 @@ export const ExpenseByTypeChart = ({
           </li>
         </ul>
 
-        {/* Gráfico */}
-        <div className="-translate-x-8">
-          <PieChart width={320} height={350}>
-            <Pie
+        <div className="w-2/3 h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
               data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              label
+              layout="vertical"
+              margin={{ top: 20, right: 40, bottom: 20, left: 100 }}
             >
-              {data.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </div>
-
-        {/* Legenda */}
-        <div className="flex flex-col justify-start ">
-          {data.map((entry, index) => (
-            <div key={index} className="flex items-center mb-2 text-sm">
-              <div
-                className="w-4 h-4 mr-2 rounded"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              {entry.name} – R$ {entry.value.toFixed(2)}
-            </div>
-          ))}
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis type="category" dataKey="name" />
+              <Tooltip />
+              <Bar dataKey="value" fill="#8884d8">
+                {data.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
