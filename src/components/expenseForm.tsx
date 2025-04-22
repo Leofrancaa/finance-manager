@@ -1,37 +1,69 @@
-"use client";
 import React, { useState } from "react";
+import { AddExpenseData } from "@/app/interfaces/expense";
+
+interface ExpenseFormData {
+  type: string;
+  day: string;
+  amount: string;
+  note: string;
+  fixed?: boolean;
+  paymentMethod?: string;
+  installments?: string;
+}
 
 interface ExpenseFormProps {
-  onSubmit: (data: {
-    type: string;
-    day: string;
-    amount: string;
-    paymentMethod: string;
-    installments: string;
-    note: string;
-  }) => void;
+  onSubmit: (data: AddExpenseData) => void;
 }
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ExpenseFormData>({
     type: "",
     day: "",
     amount: "",
+    note: "",
+    fixed: false,
     paymentMethod: "",
     installments: "",
-    note: "",
   });
 
-  const handleChange = (
+  function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  ) {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit(formData);
+    if (
+      !formData.type ||
+      !formData.day ||
+      !formData.amount ||
+      Number(formData.day) < 1 ||
+      Number(formData.day) > 31 ||
+      Number(formData.amount) <= 0 ||
+      !formData.paymentMethod
+    ) {
+      alert("Preencha todos os campos corretamente.");
+      return;
+    }
+    if (
+      formData.paymentMethod === "cartão de crédito" &&
+      (!formData.installments ||
+        isNaN(Number(formData.installments)) ||
+        Number(formData.installments) < 1)
+    ) {
+      alert("Preencha um número válido de parcelas.");
+      return;
+    }
+    onSubmit({
+      ...formData,
+      paymentMethod: formData.paymentMethod || "",
+      installments: formData.installments || undefined,
+    });
     setFormData({
       type: "",
       day: "",
@@ -39,101 +71,102 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit }) => {
       paymentMethod: "",
       installments: "",
       note: "",
+      fixed: false,
     });
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 mt-4">
-      {/* Select padronizado para tipo de gasto */}
+    <form
+      onSubmit={handleSubmit}
+      className="p-4 bg-white rounded-md flex flex-col gap-4 border mt-2"
+    >
       <select
         name="type"
         value={formData.type}
         onChange={handleChange}
-        className="w-full p-2 border rounded bg-white text-black cursor-pointer"
         required
+        className="w-full p-2 border rounded"
       >
-        <option className="cursor-pointer" value="">
-          Tipo de gasto
-        </option>
-        <option className="cursor-pointer" value="alimentação">
-          Alimentação
-        </option>
-        <option className="cursor-pointer" value="transporte">
-          Transporte
-        </option>
-        <option className="cursor-pointer" value="moradia">
-          Moradia
-        </option>
-        <option className="cursor-pointer" value="lazer">
-          Lazer
-        </option>
-        <option className="cursor-pointer" value="educação">
-          Educação
-        </option>
-        <option className="cursor-pointer" value="saúde">
-          Saúde
-        </option>
-        <option className="cursor-pointer" value="outros">
-          Outros
-        </option>
+        <option value="">Tipo de gasto</option>
+        <option value="alimentação">Alimentação</option>
+        <option value="educação">Educação</option>
+        <option value="lazer">Lazer</option>
+        <option value="assinatura">Assinatura</option>
+        <option value="moradia">Moradia</option>
+        <option value="transporte">Transporte</option>
+        <option value="outros">Outros</option>
       </select>
       <input
         name="day"
         type="number"
-        value={formData.day}
-        onChange={handleChange}
-        placeholder="Dia do gasto (1-31)"
-        className="w-full p-2 border rounded bg-white text-black placeholder-black"
         min={1}
         max={31}
+        value={formData.day}
+        onChange={handleChange}
+        placeholder="Dia do mês"
         required
+        className="w-full p-2 border rounded"
       />
       <input
         name="amount"
         type="number"
+        min={0.01}
+        step={0.01}
         value={formData.amount}
         onChange={handleChange}
         placeholder="Valor"
-        className="w-full p-2 border rounded bg-white text-black placeholder-black"
         required
+        className="w-full p-2 border rounded"
       />
-
-      <input
-        name="note"
-        type="text"
-        value={formData.note}
-        onChange={handleChange}
-        placeholder="Observações (ex: janta com amigos)"
-        className="w-full p-2 border rounded bg-white text-black placeholder:text-gray-500"
-      />
-
       <select
         name="paymentMethod"
         value={formData.paymentMethod}
         onChange={handleChange}
-        className="w-full p-2 border rounded bg-white text-black cursor-pointer"
         required
+        className="w-full p-2 border rounded"
       >
         <option value="">Forma de pagamento</option>
         <option value="dinheiro">Dinheiro</option>
-        <option value="cartão">Cartão</option>
+        <option value="cartão de débito">Cartão de Débito</option>
+        <option value="cartão de crédito">Cartão de Crédito</option>
         <option value="pix">Pix</option>
+        <option value="boleto">Boleto</option>
+        <option value="transferência">Transferência</option>
+        <option value="outro">Outro</option>
       </select>
-      {formData.paymentMethod === "cartão" && (
+      {/* Campo de parcelas: só se for cartão de crédito */}
+      {formData.paymentMethod === "cartão de crédito" && (
         <input
           name="installments"
           type="number"
-          value={formData.installments}
+          min={1}
+          step={1}
+          value={formData.installments || ""}
           onChange={handleChange}
           placeholder="Parcelas"
+          required
           className="w-full p-2 border rounded"
         />
       )}
-      <button
-        type="submit"
-        className="w-full p-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-500 transition duration-200"
-      >
-        Adicionar gasto
+      <input
+        name="note"
+        value={formData.note}
+        onChange={handleChange}
+        placeholder="Observação (opcional)"
+        className="w-full p-2 border rounded"
+      />
+      <label className="flex gap-2 items-center mt-2">
+        <input
+          type="checkbox"
+          name="fixed"
+          checked={!!formData.fixed}
+          onChange={handleChange}
+          className="accent-blue-500"
+        />
+        Gasto recorrente (fixo)
+      </label>
+      <button className="w-full py-2 bg-green-600 text-white font-bold rounded cursor-pointer hover:bg-green-700 transition duration-200">
+        Adicionar
       </button>
     </form>
   );

@@ -28,12 +28,14 @@ interface Expense {
   amount: number;
 }
 
-export const MonthlyExpensesChart = ({
-  expenses,
-  year,
-}: {
+interface MonthlyExpensesChartProps {
   expenses: Expense[];
   year: number;
+}
+
+export const MonthlyExpensesChart: React.FC<MonthlyExpensesChartProps> = ({
+  expenses,
+  year,
 }) => {
   // Agrupa os gastos por mês
   const monthlyTotals = Array.from({ length: 12 }, (_, month) => {
@@ -50,26 +52,37 @@ export const MonthlyExpensesChart = ({
     };
   });
 
+  // Verifica se existem gastos em algum mês
+  const hasData = monthlyTotals.some((m) => m.value > 0);
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col border-2 border-black">
+    <div className="bg-white p-4 rounded-lg shadow-xl w-[93vw] mx-auto flex flex-col border-2 border-black my-6">
       <h2 className="text-xl font-bold mb-4 flex self-center border-b-2 border-green-500">
         Gastos Mensais em {year}
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={monthlyTotals}>
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="value">
-            {monthlyTotals.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {hasData ? (
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={monthlyTotals}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+            <Bar dataKey="value">
+              {monthlyTotals.map((data, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    data.value === 0 ? "#F1F1F1" : COLORS[index % COLORS.length]
+                  }
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="text-center text-gray-500 m-12 font-medium">
+          Nenhum gasto lançado em {year}.
+        </div>
+      )}
     </div>
   );
 };

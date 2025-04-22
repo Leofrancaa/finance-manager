@@ -10,9 +10,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { Expense } from "@/app/interfaces/expense"; // 👈 ajuste o caminho se necessário
+import { Expense } from "@/app/interfaces/expense"; // Ajuste o caminho se necessário
 
-interface ExpenseSummaryProps {
+interface ExpenseByTypeChartProps {
   expenses: Expense[];
   year: number;
   month: number | null;
@@ -31,10 +31,9 @@ export const ExpenseByTypeChart = ({
   expenses,
   year,
   month,
-}: ExpenseSummaryProps) => {
+}: ExpenseByTypeChartProps) => {
   const filteredExpenses = useMemo(() => {
     if (month === null) return [];
-
     return expenses.filter((e) => {
       const d = new Date(e.date);
       return d.getFullYear() === year && d.getMonth() === month;
@@ -59,14 +58,16 @@ export const ExpenseByTypeChart = ({
   let lowestCategory = "";
   let minValue = Infinity;
 
-  for (const { name, value } of data) {
-    if (value > maxValue) {
-      maxValue = value;
-      topCategory = name;
-    }
-    if (value < minValue) {
-      minValue = value;
-      lowestCategory = name;
+  if (data.length > 0) {
+    for (const { name, value } of data) {
+      if (value > maxValue || topCategory === "") {
+        maxValue = value;
+        topCategory = name;
+      }
+      if (value < minValue || lowestCategory === "") {
+        minValue = value;
+        lowestCategory = name;
+      }
     }
   }
 
@@ -75,49 +76,69 @@ export const ExpenseByTypeChart = ({
       <h2 className="text-lg font-bold mb-4 border-b-2 border-green-500">
         Gastos por Tipo
       </h2>
-      <div className="flex w-full justify-between px-16">
-        <ul className="text-md w-1/3">
-          <li>
-            {topCategory && (
-              <p className="text-gray-700 mt-2">
-                • Maior gasto no mês: <strong>{topCategory}</strong> com R${" "}
-                {maxValue.toFixed(2)}
-              </p>
-            )}
-          </li>
-          <li>
-            {lowestCategory && (
-              <p className="text-gray-700 mt-1">
-                • Menor gasto do mês: <strong>{lowestCategory}</strong> com R${" "}
-                {minValue.toFixed(2)}
-              </p>
-            )}
-          </li>
-        </ul>
 
-        <div className="w-2/3 h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              layout="vertical"
-              margin={{ top: 20, right: 40, bottom: 20, left: 100 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="name" />
-              <Tooltip />
-              <Bar dataKey="value" fill="#8884d8">
-                {data.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      {month === null ? (
+        <p className="text-gray-500 my-10">
+          Selecione um mês para ver o gráfico.
+        </p>
+      ) : data.length === 0 ? (
+        <p className="text-gray-500 my-10">
+          Nenhum registro de despesas neste mês.
+        </p>
+      ) : (
+        <div className="flex w-full justify-between px-16">
+          <ul className="text-md w-1/3">
+            <li>
+              <p className="text-gray-700 mt-2">
+                • Maior gasto no mês:{" "}
+                {topCategory ? (
+                  <>
+                    <strong>{topCategory}</strong> com R$ {maxValue.toFixed(2)}
+                  </>
+                ) : (
+                  <span>Nenhuma despesa encontrada</span>
+                )}
+              </p>
+            </li>
+            <li>
+              <p className="text-gray-700 mt-1">
+                • Menor gasto do mês:{" "}
+                {lowestCategory ? (
+                  <>
+                    <strong>{lowestCategory}</strong> com R${" "}
+                    {minValue.toFixed(2)}
+                  </>
+                ) : (
+                  <span>Nenhuma despesa encontrada</span>
+                )}
+              </p>
+            </li>
+          </ul>
+
+          <div className="w-2/3 h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ top: 20, right: 40, bottom: 20, left: 100 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis type="category" dataKey="name" />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8">
+                  {data.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

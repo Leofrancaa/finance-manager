@@ -1,11 +1,15 @@
 export interface Expense {
-  _id?: string;
+  id?: string;
   type: string;
   date: string;
   amount: number;
   paymentMethod: string;
   installments?: number;
   note?: string;
+  fixed?: boolean; // novo campo! (opcional)
+  _id?: string; // Optional property
+  startDate?: string; // Para gastos fixos, a data de início
+  day?: number; // Para gastos fixos, o dia do mês
 }
 
 export interface MappedExpense extends Omit<Expense, "_id"> {
@@ -19,4 +23,15 @@ export interface AddExpenseData {
   paymentMethod: string;
   installments?: string;
   note?: string;
+  fixed?: boolean; // novo campo! (opcional)
+  startDate?: string; // Para gastos fixos, a data de início
+}
+
+export interface Income {
+  id: string;
+  type: string; // Ex: "Salário", "Freelance", "Outros"
+  amount: number;
+  date: string; // ISO string
+  note?: string;
+  source?: string; // Opcional, se quiser detalhar
 }

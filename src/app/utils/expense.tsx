@@ -13,7 +13,7 @@ export async function saveExpenses(expenses: Expense[]): Promise<Expense[]> {
     });
 
     const saved = await response.json();
-    savedExpenses.push({ ...expense, _id: saved.insertedId });
+    savedExpenses.push({ ...expense, id: saved.insertedId });
   }
 
   return savedExpenses;
